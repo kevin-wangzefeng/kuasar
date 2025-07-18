@@ -1,0 +1,26 @@
+[package]
+name = "resource-slot-sandboxer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+built = { version = "0.7.0", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }
+
+[dependencies]
+env_logger = "0.9.0"
+anyhow = { version = "=1.0.66", default-features = false, features = ["std"] }
+tokio = { version = "1.19.2", features = ["full"] }
+signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
+async-trait = "0.1.81"
+futures = { version = "0.3.21" }
+log = { version = "0.4.17", features = ["std"] }
+serde_json = "1.0.96"
+serde = { version = "1.0.163", features = ["derive"] }
+clap = { version = "4.5.4", features = ["derive"] }
+time = "0.3.5"
+nix = { version = "0.28.0", features = ["fs", "mount", "socket", "process", "sched", "signal", "term"] }
+
+containerd-sandbox = { git = "https://github.com/kuasar-io/rust-extensions.git" }
+containerd-shim = { git = "https://github.com/kuasar-io/rust-extensions.git", features = ["async"] }
