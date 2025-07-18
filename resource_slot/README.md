@@ -15,7 +15,6 @@ The ResourceSlot sandboxer is designed to:
 
 - **Resource Tracking**: Extracts and tracks CPU, memory, PID, and other resource limits from sandbox/container configurations
 - **Logging**: Detailed logging of resource allocations and sandbox lifecycle events
-- **Persistence**: Saves resource information to JSON files for monitoring
 - **Full API Compliance**: Implements all required Sandbox and Sandboxer trait methods
 - **No Resource Allocation**: Does not actually allocate system resources or create real containers
 
@@ -51,18 +50,15 @@ Run the sandboxer with:
 resource-slot-sandboxer --listen /run/resource-slot-sandboxer.sock --dir /var/lib/kuasar-resource-slot --log-level info
 ```
 
-## Output
+## Logging Output
 
-The sandboxer will create JSON files in the sandbox base directory containing extracted resource information:
+The sandboxer logs resource information for each sandbox and container:
 
-```json
-{
-  "cpu_limit": 2.0,
-  "cpu_request": 1.0,
-  "memory_limit": 2147483648,
-  "memory_request": 1073741824,
-  "pid_limit": 1000,
-  "storage_limit": null,
-  "network_bandwidth": null
-}
+```
+[INFO] Creating ResourceSlot sandbox: test-sandbox
+[INFO] ResourceSlot sandbox test-sandbox resource simulation:
+[INFO]   - CPU limit: 2 cores
+[INFO]   - Memory limit: 2147483648 bytes
+[INFO]   - PID limit: 1000
+[INFO] ResourceSlot sandbox test-sandbox started successfully
 ```

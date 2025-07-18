@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "test-container",
+    "attempt": 1
+  },
+  "image": {
+    "image": "nginx:latest"
+  },
+  "resources": {
+    "cpu_quota": 200000,
+    "cpu_period": 100000,
+    "cpu_shares": 1024,
+    "memory_limit_in_bytes": 2147483648,
+    "oom_score_adj": 1000,
+    "pid_limit": 1000
+  },
+  "linux": {
+    "resources": {
+      "cpu": {
+        "shares": 1024,
+        "quota": 200000,
+        "period": 100000
+      },
+      "memory": {
+        "limit": 2147483648
+      },
+      "pids": {
+        "limit": 1000
+      }
+    }
+  }
+}
