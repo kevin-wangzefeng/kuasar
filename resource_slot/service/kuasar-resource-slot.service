@@ -1,0 +1,15 @@
+[Unit]
+Description=Kuasar ResourceSlot Sandboxer
+Documentation=https://github.com/kuasar-io/kuasar
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/resource-slot-sandboxer --listen /run/resource-slot-sandboxer.sock --dir /var/lib/kuasar-resource-slot --log-level info
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+OOMScoreAdjust=-999
+
+[Install]
+WantedBy=multi-user.target

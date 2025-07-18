@@ -19,11 +19,11 @@ ifeq ($(ENABLE_YOUKI), true)
 	VMM_TASK_FEATURES = youki
 endif
 
-.PHONY: vmm wasm quark clean all install-vmm install-wasm install-quark install \
+.PHONY: vmm wasm quark runc resource-slot clean all install-vmm install-wasm install-quark install-runc install-resource-slot install \
         bin/vmm-sandboxer bin/vmm-task bin/vmlinux.bin bin/kuasar.img bin/kuasar.initrd \
-        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer
+        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer
 
-all: vmm quark wasm
+all: vmm quark wasm runc resource-slot
 
 bin/vmm-sandboxer:
 	@cd vmm/sandbox && cargo build --release --bin ${HYPERVISOR} --features=${VMM_SANDBOX_FEATURES}
@@ -57,9 +57,14 @@ bin/runc-sandboxer:
 	@cd runc && cargo build --release --features=${RUNC_FEATURES}
 	@mkdir -p bin && cp runc/target/release/runc-sandboxer bin/runc-sandboxer
 
+bin/resource-slot-sandboxer:
+	@cd resource_slot && cargo build --release
+	@mkdir -p bin && cp resource_slot/target/release/resource-slot-sandboxer bin/resource-slot-sandboxer
+
 wasm: bin/wasm-sandboxer
 quark: bin/quark-sandboxer
 runc: bin/runc-sandboxer
+resource-slot: bin/resource-slot-sandboxer
 
 ifeq ($(HYPERVISOR), cloud_hypervisor)
 vmm: bin/vmm-sandboxer bin/kuasar.img bin/vmlinux.bin
@@ -75,6 +80,7 @@ clean:
 	@cd wasm && cargo clean
 	@cd quark && cargo clean
 	@cd runc && cargo clean
+	@cd resource_slot && cargo clean
 
 install-vmm:
 	@install -d -m 750 ${DEST_DIR}${BIN_DIR}
@@ -108,4 +114,9 @@ install-quark:
 install-runc:
 	@install -p -m 550 bin/runc-sandboxer ${DEST_DIR}${BIN_DIR}/runc-sandboxer
 
-install: all install-vmm install-wasm install-quark install-runc
+install-resource-slot:
+	@install -p -m 550 bin/resource-slot-sandboxer ${DEST_DIR}${BIN_DIR}/resource-slot-sandboxer
+	@install -d -m 750 ${DEST_DIR}${SYSTEMD_SERVICE_DIR}
+	@install -p -m 640 resource_slot/service/kuasar-resource-slot.service ${DEST_DIR}${SYSTEMD_SERVICE_DIR}/kuasar-resource-slot.service
+
+install: all install-vmm install-wasm install-quark install-runc install-resource-slot
