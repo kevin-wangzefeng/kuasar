@@ -35,6 +35,8 @@ Kuasar is an efficient container runtime that provides cloud-native, all-scenari
 | App Kernel | gVisor           | Planned in 2024 |
 |            | Quark            | Supported       |
 | runC       | runC             | Supported       |
+| ResourceSlot| Fake Sandbox    | Supported       |
+
 # Why Kuasar?
 
 In the container world, a sandbox is a technique used to separate container processes from each other, and from the operating system itself. After the introduction of the [Sandbox API](https://github.com/containerd/containerd/issues/4131), sandbox has become the first-class citizen in containerd. With more and more sandbox techniques available in the container world, a management service called "sandboxer" is expected to be proposed.
