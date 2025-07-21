@@ -1,0 +1,12 @@
+metadata:
+  name: resource-slot-sandbox
+  namespace: default
+  uid: resource-slot-sandbox-uid-001
+  attempt: 0
+linux:
+  cgroup_parent: "/kuasar/resource-slot"
+  security_context:
+    namespace_options:
+      network: 2
+annotations:
+  io.kubernetes.cri.runtime-handler: "resource-slot"

@@ -1,0 +1,12 @@
+metadata:
+  name: wasmedge-container
+image:
+  image: "wasmedge/example-wasi:latest"
+command:
+  - "/wasi_example_main.wasm"
+linux:
+  resources:
+    cpu_quota: 10000
+    cpu_period: 100000
+    memory_limit_in_bytes: 104857600
+log_path: "/tmp/wasmedge-container.log"
