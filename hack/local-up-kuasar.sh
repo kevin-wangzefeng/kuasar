@@ -1,45 +1,46 @@
-#!/bin/bash
-# Purpose: Local startup of Kuasar for e2e testing
-# Supports selective compilation and startup of different sandbox implementations
+#!/usr/bin/env bash
 
-set -e
+# Copyright 2025 The Kuasar Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script builds and runs Kuasar services locally for testing.
+# It supports selective compilation and startup of different sandbox implementations.
+# Usage: hack/local-up-kuasar.sh [options]
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# Setup repository root and library functions
+KUASAR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "${KUASAR_ROOT}/hack/lib/init.sh"
 
 # Default configuration
 DEFAULT_COMPONENTS="runc,wasm,resource-slot"
-KUASAR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-LOG_DIR="$KUASAR_ROOT/logs"
+LOG_DIR="${LOG_DIR:-${KUASAR_ROOT}/logs}"
 PID_FILE="$LOG_DIR/kuasar.pid"
 
 # Create log directory
 mkdir -p "$LOG_DIR"
 
-# Color output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-log_debug() {
-    echo -e "${BLUE}[DEBUG]${NC} $1"
-}
-
 # Display usage help
 show_help() {
     cat << EOF
 Usage: $0 [OPTIONS]
+
+Local Kuasar cluster startup script for testing.
+Builds and runs Kuasar sandbox services following Kubernetes patterns.
 
 Options:
   -c, --components COMPONENTS   Specify components to compile and start, comma-separated
@@ -93,33 +94,33 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            log_error "Unknown parameter: $1"
+            kuasar::log::error "Unknown parameter: $1"
             show_help
             exit 1
             ;;
     esac
 done
 
-log_info "Kuasar Local Startup Script"
-log_info "Working directory: $KUASAR_ROOT"
-log_info "Selected components: $COMPONENTS"
+kuasar::log::info "Kuasar Local Startup Script"
+kuasar::log::info "Working directory: $KUASAR_ROOT"
+kuasar::log::info "Selected components: $COMPONENTS"
 
 # Convert component string to array
 IFS=',' read -ra COMPONENT_ARRAY <<< "$COMPONENTS"
 
 # Cleanup function
 cleanup() {
-    log_info "Cleaning up Kuasar processes..."
+    kuasar::log::info "Cleaning up Kuasar processes..."
     
     # Terminate all Kuasar-related processes
     if [[ -f "$PID_FILE" ]]; then
         while IFS= read -r pid; do
             if kill -0 "$pid" 2>/dev/null; then
-                log_info "Terminating process $pid"
+                kuasar::log::info "Terminating process $pid"
                 kill -TERM "$pid" 2>/dev/null || true
                 sleep 1
                 if kill -0 "$pid" 2>/dev/null; then
-                    log_warn "Force terminating process $pid"
+                    kuasar::log::warn "Force terminating process $pid"
                     kill -KILL "$pid" 2>/dev/null || true
                 fi
             fi
@@ -133,11 +134,11 @@ cleanup() {
     pkill -f "resource-slot-sandboxer" 2>/dev/null || true
     
     # Clean up temporary files
-    log_info "Cleaning temporary files..."
+    kuasar::log::info "Cleaning temporary files..."
     rm -rf /tmp/kuasar-test-* 2>/dev/null || true
     rm -rf /var/run/kuasar* 2>/dev/null || true
     
-    log_info "Cleanup complete"
+    kuasar::log::info "Cleanup complete"
 }
 
 # Set automatic cleanup on exit
@@ -224,7 +225,7 @@ show_installation_instructions() {
 
 # Check dependencies
 check_dependencies() {
-    log_info "Checking runtime dependencies..."
+    kuasar::log::info "Checking runtime dependencies..."
     
     local missing_deps=()
     local missing_optional=()
@@ -240,7 +241,7 @@ check_dependencies() {
     # Check Rust version
     if command -v rustc &> /dev/null; then
         local rust_version=$(rustc --version | awk '{print $2}')
-        log_info "Detected Rust version: $rust_version"
+        kuasar::log::info "Detected Rust version: $rust_version"
     fi
     
     # Check component-specific dependencies based on selected components
@@ -254,13 +255,13 @@ check_dependencies() {
             wasm)
                 if ! command -v wasmedge &> /dev/null && ! command -v wasmtime &> /dev/null; then
                     missing_optional+=("wasmedge")
-                    log_warn "WasmEdge or Wasmtime not found, WASM functionality may not work properly"
+                    kuasar::log::warn "WasmEdge or Wasmtime not found, WASM functionality may not work properly"
                 fi
                 ;;
             vmm)
                 if ! command -v qemu-system-x86_64 &> /dev/null; then
                     missing_optional+=("qemu-system-x86_64")
-                    log_warn "QEMU not found, VMM functionality may not work properly"
+                    kuasar::log::warn "QEMU not found, VMM functionality may not work properly"
                 fi
                 ;;
         esac
@@ -269,7 +270,7 @@ check_dependencies() {
     # Check containerd related
     if ! command -v containerd &> /dev/null; then
         missing_optional+=("containerd")
-        log_warn "containerd not found, some functionality may be limited"
+        kuasar::log::warn "containerd not found, some functionality may be limited"
     fi
     
     if ! command -v crictl &> /dev/null; then
@@ -278,18 +279,18 @@ check_dependencies() {
     
     # Report missing required dependencies
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
-        log_error "Missing the following required dependencies:"
+        kuasar::log::error "Missing the following required dependencies:"
         echo ""
         for dep in "${missing_deps[@]}"; do
             echo -e "${RED}  ✗ $dep${NC}"
             show_installation_instructions "$dep"
         done
-        log_error "Please install the missing required dependencies and try again"
+        kuasar::log::error "Please install the missing required dependencies and try again"
         
         # If optional dependencies are missing, also show installation instructions
         if [[ ${#missing_optional[@]} -gt 0 ]]; then
             echo ""
-            log_warn "Missing the following optional dependencies (does not affect basic functionality):"
+            kuasar::log::warn "Missing the following optional dependencies (does not affect basic functionality):"
             echo ""
             for dep in "${missing_optional[@]}"; do
                 echo -e "${YELLOW}  ! $dep${NC}"
@@ -303,28 +304,28 @@ check_dependencies() {
     # Show installation instructions for optional dependencies
     if [[ ${#missing_optional[@]} -gt 0 ]]; then
         echo ""
-        log_warn "Recommend installing the following optional dependencies for full functionality:"
+        kuasar::log::warn "Recommend installing the following optional dependencies for full functionality:"
         echo ""
         for dep in "${missing_optional[@]}"; do
             echo -e "${YELLOW}  ! $dep${NC}"
             show_installation_instructions "$dep"
         done
         echo ""
-        log_warn "You can choose to continue, or install these dependencies first for better experience"
+        kuasar::log::warn "You can choose to continue, or install these dependencies first for better experience"
         read -p "Continue? (y/N): " -r
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Startup cancelled"
+            kuasar::log::info "Startup cancelled"
             exit 0
         fi
     fi
     
-    log_info "Dependency check complete ✓"
+    kuasar::log::info "Dependency check complete ✓"
 }
 
 # Build component
 build_component() {
     local component=$1
-    log_info "Building component: $component"
+    kuasar::log::info "Building component: $component"
     
     case "$component" in
         runc)
@@ -348,18 +349,18 @@ build_component() {
             cargo build --release
             ;;
         *)
-            log_error "Unknown component: $component"
+            kuasar::log::error "Unknown component: $component"
             return 1
             ;;
     esac
     
-    log_info "Component $component build complete ✓"
+    kuasar::log::info "Component $component build complete ✓"
 }
 
 # Start component
 start_component() {
     local component=$1
-    log_info "Starting component: $component"
+    kuasar::log::info "Starting component: $component"
     
     local binary=""
     local args=""
@@ -387,14 +388,14 @@ start_component() {
             args="--listen /run/kuasar-quark.sock --dir /run/kuasar-quark"
             ;;
         *)
-            log_error "Unknown component: $component"
+            kuasar::log::error "Unknown component: $component"
             return 1
             ;;
     esac
     
     if [[ ! -f "$binary" ]]; then
-        log_error "Binary file does not exist: $binary"
-        log_error "Please build the component first or use --skip-build parameter"
+        kuasar::log::error "Binary file does not exist: $binary"
+        kuasar::log::error "Please build the component first or use --skip-build parameter"
         return 1
     fi
     
@@ -404,7 +405,7 @@ start_component() {
     sudo chmod 755 "$run_dir"
     
     # Start component
-    log_info "Starting: $binary $args"
+    kuasar::log::info "Starting: $binary $args"
     if [[ "$DEBUG_MODE" == "true" ]]; then
         sudo "$binary" $args 2>&1 | tee "$log_file" &
     else
@@ -417,31 +418,31 @@ start_component() {
     # Wait for service to start
     sleep 2
     if kill -0 "$pid" 2>/dev/null; then
-        log_info "Component $component started successfully (PID: $pid) ✓"
+        kuasar::log::info "Component $component started successfully (PID: $pid) ✓"
     else
-        log_error "Component $component failed to start"
-        log_error "Check logs: $log_file"
+        kuasar::log::error "Component $component failed to start"
+        kuasar::log::error "Check logs: $log_file"
         return 1
     fi
 }
 
 # Verify service status
 verify_services() {
-    log_info "Verifying service status..."
+    kuasar::log::info "Verifying service status..."
     
     for component in "${COMPONENT_ARRAY[@]}"; do
         local sock_file="/run/kuasar-$component.sock"
         if [[ -S "$sock_file" ]]; then
-            log_info "Component $component socket OK: $sock_file ✓"
+            kuasar::log::info "Component $component socket OK: $sock_file ✓"
         else
-            log_warn "Component $component socket not found: $sock_file"
+            kuasar::log::warn "Component $component socket not found: $sock_file"
         fi
     done
 }
 
 # Show running status
 show_status() {
-    log_info "Kuasar service status:"
+    kuasar::log::info "Kuasar service status:"
     echo "===================="
     
     if [[ -f "$PID_FILE" ]]; then
@@ -481,23 +482,23 @@ main() {
     
     # If only checking dependencies, exit
     if [[ "$CHECK_DEPS_ONLY" == "true" ]]; then
-        log_info "Dependency check complete, exiting"
+        kuasar::log::info "Dependency check complete, exiting"
         exit 0
     fi
     
     # Build components
     if [[ "$SKIP_BUILD" == "false" ]]; then
-        log_info "Starting to build selected components..."
+        kuasar::log::info "Starting to build selected components..."
         for component in "${COMPONENT_ARRAY[@]}"; do
             build_component "$component"
         done
-        log_info "All components build complete ✓"
+        kuasar::log::info "All components build complete ✓"
     else
-        log_info "Skipping build step"
+        kuasar::log::info "Skipping build step"
     fi
     
     # Start components
-    log_info "Starting selected components..."
+    kuasar::log::info "Starting selected components..."
     for component in "${COMPONENT_ARRAY[@]}"; do
         start_component "$component"
     done
@@ -508,13 +509,13 @@ main() {
     # Show status
     show_status
     
-    log_info "Kuasar services startup complete!"
-    log_info "You can now run test scripts in another terminal:"
-    log_info "  cd $KUASAR_ROOT/tests/basics"
-    log_info "  ./test-runc.sh"
-    log_info "  ./test-resource-slot.sh"
-    log_info ""
-    log_info "Press Ctrl+C to stop all services"
+    kuasar::log::info "Kuasar services startup complete!"
+    kuasar::log::info "You can now run test scripts in another terminal:"
+    kuasar::log::info "  cd $KUASAR_ROOT/tests/basics"
+    kuasar::log::info "  ./test-runc.sh"
+    kuasar::log::info "  ./test-resource-slot.sh"
+    kuasar::log::info ""
+    kuasar::log::info "Press Ctrl+C to stop all services"
     
     # Wait for user interruption
     while true; do

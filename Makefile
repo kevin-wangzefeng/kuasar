@@ -3,7 +3,6 @@ GUESTOS_IMAGE ?= centos
 WASM_RUNTIME ?= wasmedge
 KERNEL_VERSION ?= 6.12.8
 ARCH ?= x86_64
-# DEST_DIR is used when built with RPM format
 DEST_DIR ?= /
 INSTALL_DIR := /var/lib/kuasar
 BIN_DIR := /usr/local/bin
@@ -21,9 +20,10 @@ endif
 
 .PHONY: vmm wasm quark runc resource-slot clean all install-vmm install-wasm install-quark install-runc install-resource-slot install \
         bin/vmm-sandboxer bin/vmm-task bin/vmlinux.bin bin/kuasar.img bin/kuasar.initrd \
-        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer
+        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer \
+        test-e2e test-e2e-framework verify-e2e local-up clean-e2e help
 
-all: vmm quark wasm runc resource-slot
+all: vmm quark wasm runc resource-slot ## Build all Kuasar components
 
 bin/vmm-sandboxer:
 	@cd vmm/sandbox && cargo build --release --bin ${HYPERVISOR} --features=${VMM_SANDBOX_FEATURES}
@@ -61,19 +61,19 @@ bin/resource-slot-sandboxer:
 	@cd resource_slot && cargo build --release
 	@mkdir -p bin && cp resource_slot/target/release/resource-slot-sandboxer bin/resource-slot-sandboxer
 
-wasm: bin/wasm-sandboxer
-quark: bin/quark-sandboxer
-runc: bin/runc-sandboxer
-resource-slot: bin/resource-slot-sandboxer
+wasm: bin/wasm-sandboxer ## Build WebAssembly sandboxer
+quark: bin/quark-sandboxer ## Build Quark sandboxer  
+runc: bin/runc-sandboxer ## Build runc sandboxer
+resource-slot: bin/resource-slot-sandboxer ## Build resource-slot sandboxer
 
 ifeq ($(HYPERVISOR), cloud_hypervisor)
-vmm: bin/vmm-sandboxer bin/kuasar.img bin/vmlinux.bin
+vmm: bin/vmm-sandboxer bin/kuasar.img bin/vmlinux.bin ## Build VMM sandboxer (cloud-hypervisor)
 else
 # stratovirt or qemu
-vmm: bin/vmm-sandboxer bin/kuasar.initrd bin/vmlinux.bin
+vmm: bin/vmm-sandboxer bin/kuasar.initrd bin/vmlinux.bin ## Build VMM sandboxer (stratovirt/qemu)
 endif
 
-clean:
+clean: ## Clean all build artifacts
 	@rm -rf bin
 	@cd vmm/sandbox && cargo clean
 	@cd vmm/task && cargo clean
@@ -81,6 +81,22 @@ clean:
 	@cd quark && cargo clean
 	@cd runc && cargo clean
 	@cd resource_slot && cargo clean
+
+# E2E Testing targets
+test-e2e: ## Run full e2e integration tests (requires environment setup)
+	@$(MAKE) -f Makefile.e2e test-e2e
+
+test-e2e-framework: ## Run e2e framework unit tests (no service startup required)
+	@$(MAKE) -f Makefile.e2e test-e2e-framework
+
+verify-e2e: ## Verify e2e test environment
+	@hack/verify-e2e.sh
+
+local-up: ## Start local Kuasar cluster for testing
+	@hack/local-up-kuasar.sh
+
+clean-e2e: ## Clean e2e test artifacts
+	@$(MAKE) -f Makefile.e2e clean-e2e
 
 install-vmm:
 	@install -d -m 750 ${DEST_DIR}${BIN_DIR}
@@ -119,4 +135,19 @@ install-resource-slot:
 	@install -d -m 750 ${DEST_DIR}${SYSTEMD_SERVICE_DIR}
 	@install -p -m 640 resource_slot/service/kuasar-resource-slot.service ${DEST_DIR}${SYSTEMD_SERVICE_DIR}/kuasar-resource-slot.service
 
-install: all install-vmm install-wasm install-quark install-runc install-resource-slot
+install: all install-vmm install-wasm install-quark install-runc install-resource-slot ## Install all Kuasar components
+
+.PHONY: help
+help: ## Display this help screen
+	@echo "Kuasar Build System"
+	@echo ""
+	@echo "Available targets:"
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "Variables:"
+	@echo "  HYPERVISOR       Hypervisor to use (default: cloud_hypervisor)"
+	@echo "  GUESTOS_IMAGE    Guest OS image type (default: centos)"
+	@echo "  WASM_RUNTIME     WebAssembly runtime (default: wasmedge)"
+	@echo "  KERNEL_VERSION   Kernel version (default: 6.12.8)"
+	@echo "  ARCH             Target architecture (default: x86_64)"
+	@echo "  ENABLE_YOUKI     Enable youki features (default: false)"

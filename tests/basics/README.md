@@ -1,86 +1,90 @@
-# Kuasar Test Files Documentation
+# Kuasar Test Migration Notice
 
-This directory contains configuration files and scripts for testing different Kuasar runtimes.
+**NOTICE: Test files have been reorganized to follow Kubernetes e2e testing patterns.**
 
-## File Structure
+## New Structure
 
-### Sandbox Configuration Files (CRI YAML)
-- `sandbox-runc.yaml` - runc sandbox configuration
-- `sandbox-resource-slot.yaml` - resource-slot sandbox configuration
-- `sandbox-wasmedge.yaml` - wasmEdge sandbox configuration
+The test files have been moved and restructured as follows:
 
-### Container Configuration Files (CRI YAML)
-- `container-runc.yaml` - runc container configuration
-- `container-resource-slot.yaml` - resource-slot container configuration
-- `container-wasmedge.yaml` - wasmEdge container configuration
+- **E2E Tests:** `test/e2e/` - Ginkgo/Gomega-based e2e test suite
+- **Setup Scripts:** `hack/local-up-kuasar.sh` - Moved to hack directory
+- **Configuration Files:** `test/e2e/configs/` - YAML configs for testing
+- **Legacy Scripts:** Removed - functionality integrated into e2e framework
 
-### Test Scripts
-- `local-up-kuasar.sh` - Local startup of Kuasar services for e2e testing
-- `test-kuasar.sh` - Main test script, tests all three runtimes simultaneously
-- `test-runc.sh` - Test runc runtime independently
-- `test-resource-slot.sh` - Test resource-slot runtime independently
-- `test-wasmedge.sh` - Test wasmEdge runtime independently
-- `quick-test.sh` - Quick functionality verification script
+## Running Tests
 
-## Usage
+### New E2E Framework (Recommended)
 
-### Manual e2e Testing Process
+Use the new e2e testing framework:
 
-1. **Start Kuasar Services**
 ```bash
-cd /path/to/kuasar/tests/basics
+# Run all e2e tests
+make -f Makefile.e2e test-e2e
 
+# Run specific runtime tests
+make -f Makefile.e2e test-e2e-runc
+make -f Makefile.e2e test-e2e-wasm
+make -f Makefile.e2e test-e2e-resource-slot
+
+# Start local cluster for manual testing
+make -f Makefile.e2e local-up
+```
+
+### Manual Testing
+
+Start Kuasar services manually:
+
+```bash
 # Start all default components (runc, wasm, resource-slot)
-./local-up-kuasar.sh
+hack/local-up-kuasar.sh
 
 # Start only specified components
-./local-up-kuasar.sh -c runc,resource-slot
+hack/local-up-kuasar.sh --components runc,resource-slot
 
 # View help
-./local-up-kuasar.sh --help
+hack/local-up-kuasar.sh --help
 ```
 
-2. **Run tests in another terminal**
-```bash
-cd /path/to/kuasar/tests/basics
-./test-runc.sh
-./test-resource-slot.sh
-```
+### Legacy Test Scripts
 
-3. **Stop services**: Press `Ctrl+C` in the startup script terminal
+The individual test scripts (`test-*.sh`) have been replaced by the unified e2e framework. 
+For equivalent functionality:
 
-### Run Complete Tests
-```bash
-cd /path/to/kuasar/tests/basics
-chmod +x *.sh
-./test-kuasar.sh
-```
+- `test-runc.sh` → `make -f Makefile.e2e test-e2e-runc`
+- `test-wasmedge.sh` → `make -f Makefile.e2e test-e2e-wasm`  
+- `test-resource-slot.sh` → `make -f Makefile.e2e test-e2e-resource-slot`
+- `test-kuasar.sh` → `make -f Makefile.e2e test-e2e`
 
-### Run Individual Tests
-```bash
-./test-runc.sh           # Test runc runtime
-./test-resource-slot.sh  # Test resource-slot runtime
-./test-wasmedge.sh       # Test wasmEdge runtime
-```
+## Migration Benefits
 
-### Manual crictl Commands
-```bash
-# Create and run runc application
-crictl runp sandbox-runc.yaml
-crictl create <sandbox-id> container-runc.yaml sandbox-runc.yaml
-crictl start <container-id>
+The new structure provides:
 
-# View status
-crictl pods
-crictl ps
-crictl stats
+- **Kubernetes-style testing** using Ginkgo/Gomega framework
+- **Better CI/CD integration** with JUnit XML reporting
+- **Parallel test execution** for faster feedback
+- **Comprehensive test lifecycle management**
+- **Improved error handling and cleanup**
+- **Standardized logging and debugging**
 
-# Cleanup
-crictl stop <container-id>
-crictl rm <container-id>
-crictl stopp <sandbox-id>
-crictl rmp <sandbox-id>
-```
+## Documentation
+
+For detailed information about the new testing framework, see:
+- `test/e2e/README.md` - Complete e2e testing guide
+- `hack/e2e-test.sh --help` - Test runner options
+- `hack/local-up-kuasar.sh --help` - Cluster setup options
+
+## Configuration Files
+
+Test configurations are now located in `test/e2e/configs/`:
+
+| File | Purpose |
+|------|---------|
+| `sandbox-runc.yaml` | runc sandbox configuration |
+| `container-runc.yaml` | runc container configuration |
+| `sandbox-resource-slot.yaml` | resource-slot sandbox configuration |
+| `container-resource-slot.yaml` | resource-slot container configuration |
+| `sandbox-wasmedge.yaml` | wasmEdge sandbox configuration |
+| `container-wasmedge.yaml` | wasmEdge container configuration |
 
 ## Resource Configuration
 
@@ -90,69 +94,12 @@ crictl rmp <sandbox-id>
 | resource-slot | 1 CPU | 512MB | Resource slot sandbox |
 | wasmEdge | 0.1 CPU | 100MB | WebAssembly runtime |
 
-## local-up-kuasar.sh Script Documentation
-
-### Features
-- Automatically check runtime dependencies (Rust, runc, crictl, etc.)
-- **Provide detailed dependency installation instructions**
-- Support selective compilation and startup of components
-- Automatic cleanup of processes and temporary files
-- Provide detailed log output
-- Support debug mode
-
-### Usage Parameters
-```bash
-./local-up-kuasar.sh [OPTIONS]
-
-Options:
-  -c, --components COMPONENTS   Specify components to compile and start, comma-separated
-                               Available values: runc,wasm,resource-slot,vmm,quark
-                               Default: runc,wasm,resource-slot
-  -h, --help                   Show help information
-  --skip-build                 Skip compilation step, start existing binaries directly
-  --debug                      Enable debug mode
-  --check-deps                 Only check dependencies, do not compile and start
-```
-
-### Usage Examples
-```bash
-# Use default components
-./local-up-kuasar.sh
-
-# Start only runc and resource-slot
-./local-up-kuasar.sh -c runc,resource-slot
-
-# Skip compilation, start directly
-./local-up-kuasar.sh --skip-build
-
-# Debug mode
-./local-up-kuasar.sh --debug
-
-# Check dependencies only
-./local-up-kuasar.sh --check-deps
-```
-
-### Dependency Management
-
-The script automatically checks the following dependencies and provides detailed installation instructions:
-
-**Required Dependencies:**
-- `cargo`, `rustc` - Rust toolchain
-- `make`, `gcc`, `pkg-config` - Compilation tools
-- `crictl` - CRI client tool
-- `runc` - Container runtime (when runc component is selected)
-
-**Optional Dependencies:**
-- `containerd` - Container runtime
-- `wasmedge`/`wasmtime` - WebAssembly runtime (when wasm component is selected)
-- `qemu-system-x86_64` - Virtual machine manager (when vmm component is selected)
-
-When missing dependencies are found, the script displays installation commands for different operating systems.
-
 ## Notes
 
 1. Ensure Kuasar runtimes are properly installed and configured
 2. Ensure crictl tool is installed and configured
 3. Ensure sufficient permissions for container operations
-4. Test scripts will automatically clean up created resources
-5. If tests fail, check Kuasar service status and logs
+4. Test framework automatically handles cleanup of created resources
+5. If tests fail, check Kuasar service status and logs in the artifacts directory
+
+For any issues with the migration, please refer to the new documentation or file an issue in the repository.
