@@ -163,7 +163,14 @@ mod error_handling_tests {
         let ctx = setup_test_context().await;
         // Intentionally not starting services
         
-        let result = timeout(Duration::from_secs(30), ctx.test_runtime("runc")).await
+        // Clean up any existing socket files to ensure clean state
+        let runtime_config = ctx.get_runtime_config("runc").expect("Should get runc config");
+        let socket_path = std::path::Path::new(&runtime_config.socket_path);
+        if socket_path.exists() {
+            let _ = std::fs::remove_file(socket_path);
+        }
+        
+        let result = timeout(Duration::from_secs(10), ctx.test_runtime("runc")).await
             .expect("Test should complete within timeout")
             .expect("Test execution should not panic");
         
