@@ -82,6 +82,7 @@ impl Default for E2EConfig {
         
         let mut socket_map = HashMap::new();
         socket_map.insert("runc".to_string(), "/run/kuasar-runc.sock".to_string());
+        socket_map.insert("wasm".to_string(), "/run/kuasar-wasm.sock".to_string());
         
         Self {
             repo_root,
@@ -390,6 +391,14 @@ impl Drop for E2EContext {
             // Warn if services weren't properly cleaned up
             // We can't do async cleanup in Drop, so this is just a warning
             eprintln!("Warning: E2EContext dropped without calling cleanup(). Services may still be running.");
+            
+            // Best-effort cleanup
+            let _ = std::process::Command::new("pkill")
+                .args(&["-f", "runc-sandboxer"])
+                .output();
+            let _ = std::process::Command::new("pkill")
+                .args(&["-f", "wasm-sandboxer"])
+                .output();
         }
     }
 }
