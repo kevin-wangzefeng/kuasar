@@ -59,6 +59,7 @@ impl Default for E2EConfig {
         
         let mut socket_map = HashMap::new();
         socket_map.insert("runc".to_string(), "/run/kuasar-runc.sock".to_string());
+        socket_map.insert("wasm".to_string(), "/run/kuasar-wasm.sock".to_string());
         
         Self {
             repo_root,

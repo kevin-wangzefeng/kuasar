@@ -1,0 +1,12 @@
+metadata:
+  name: wasmedge-sandbox
+  namespace: default
+  uid: wasmedge-sandbox-uid-001
+  attempt: 0
+linux:
+  cgroup_parent: "/kuasar/wasmedge"
+  security_context:
+    namespace_options:
+      network: 2
+annotations:
+  io.kubernetes.cri.runtime-handler: "wasmedge"

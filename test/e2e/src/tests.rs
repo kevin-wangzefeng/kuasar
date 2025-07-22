@@ -67,6 +67,58 @@ mod runtime_tests {
         
         info!("runc runtime lifecycle test completed successfully");
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_wasm_runtime_lifecycle() {
+        info!("Starting wasm runtime lifecycle test");
+        
+        let mut ctx = setup_test_context().await;
+        
+        // Start services
+        ctx.start_services(&["wasm"]).await
+            .expect("Failed to start wasm service");
+        
+        // Run the test with timeout
+        let result = timeout(TEST_TIMEOUT, ctx.test_runtime("wasm")).await
+            .expect("Test timed out")
+            .expect("Test execution failed");
+        
+        assert!(result.success, "wasm runtime test failed: {:?}", result.error);
+        assert!(result.sandbox_created, "Sandbox should be created");
+        assert!(result.container_created, "Container should be created");
+        assert!(result.container_started, "Container should be started");
+        assert!(result.container_running, "Container should reach running state");
+        assert!(result.cleanup_completed, "Cleanup should complete");
+        
+        info!("wasm runtime lifecycle test completed successfully");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_runc_and_wasm_sequential() {
+        info!("Starting sequential test of runc and wasm runtimes");
+        
+        let mut ctx = setup_test_context().await;
+        let runtimes = ["runc", "wasm"];
+        
+        // Start all services
+        ctx.start_services(&runtimes).await
+            .expect("Failed to start services");
+        
+        // Test each runtime sequentially
+        for runtime in &runtimes {
+            info!("Testing runtime: {}", runtime);
+            
+            let result = timeout(TEST_TIMEOUT, ctx.test_runtime(runtime)).await
+                .expect("Test timed out")
+                .expect("Test execution failed");
+            
+            assert!(result.success, "{} runtime test failed: {:?}", runtime, result.error);
+        }
+        
+        info!("Sequential test of runc and wasm runtimes completed successfully");
+    }
 }
 
 #[cfg(test)]
@@ -79,7 +131,7 @@ mod integration_tests {
         info!("Testing service startup and readiness");
         
         let mut ctx = setup_test_context().await;
-        let runtimes = ["runc"];
+        let runtimes = ["runc", "wasm"];
         
         // Start services and verify they become ready
         ctx.start_services(&runtimes).await
@@ -105,7 +157,7 @@ mod integration_tests {
         info!("Testing configuration files");
         
         let ctx = setup_test_context().await;
-        let runtimes = ["runc"];
+        let runtimes = ["runc", "wasm"];
         
         for runtime in &runtimes {
             let runtime_config = ctx.get_runtime_config(runtime)
