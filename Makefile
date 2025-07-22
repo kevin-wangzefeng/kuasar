@@ -118,6 +118,9 @@ test-e2e: ## Run full e2e integration tests (requires environment setup)
 test-e2e-framework: ## Run e2e framework unit tests (no service startup required)
 	@$(MAKE) -f Makefile.e2e test-e2e-framework
 
+test-e2e-runc: ## Test only runc runtime
+	@$(MAKE) -f Makefile.e2e test-e2e-runc
+
 verify-e2e: ## Verify e2e test environment
 	@hack/verify-e2e.sh
 

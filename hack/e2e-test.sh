@@ -104,8 +104,6 @@ function parse_args() {
 }
 
 function setup_directories() {
-    kube::util::ensure_clean_state
-
     echo "Setting up test environment..."
     
     # Create artifacts directory
