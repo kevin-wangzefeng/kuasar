@@ -1,9 +1,4 @@
-HYPERVISOR ?= cloud_h.PHONY: vmm wasm quark runc resource-slot clean all install-vmm install-wasm install-quark install-runc install-resource-slot install 
-        bin/vmm-sandboxer bin/vmm-task bin/vmlinux.bin bin/kuasar.img bin/kuasar.initrd 
-        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer 
-        test-e2e test-e2e-framework verify-e2e local-up clean-e2e help
-
-all: vmm quark wasm runc resource-slot ## Build all Kuasar componentsisor
+HYPERVISOR ?= cloud_hypervisor
 GUESTOS_IMAGE ?= centos
 WASM_RUNTIME ?= wasmedge
 KERNEL_VERSION ?= 6.12.8
@@ -26,9 +21,10 @@ endif
 
 .PHONY: vmm wasm quark runc resource-slot clean all install-vmm install-wasm install-quark install-runc install-resource-slot install \
         bin/vmm-sandboxer bin/vmm-task bin/vmlinux.bin bin/kuasar.img bin/kuasar.initrd \
-        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer
+        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer \
+        test-e2e test-e2e-framework verify-e2e local-up clean-e2e help
 
-all: vmm quark wasm runc resource-slot
+all: vmm quark wasm runc resource-slot ## Build all Kuasar components
 
 bin/vmm-sandboxer:
 	@cd vmm/sandbox && cargo build --release --bin ${HYPERVISOR} --features=${VMM_SANDBOX_FEATURES}
@@ -86,7 +82,22 @@ clean: ## Clean all build artifacts
 	@cd quark && cargo clean
 	@cd runc && cargo clean
 	@cd resource_slot && cargo clean
-	@cd resource_slot && cargo clean
+
+# E2E Testing targets
+test-e2e: ## Run full e2e integration tests (requires environment setup)
+	@$(MAKE) -f Makefile.e2e test-e2e
+
+test-e2e-framework: ## Run e2e framework unit tests (no service startup required)
+	@$(MAKE) -f Makefile.e2e test-e2e-framework
+
+verify-e2e: ## Verify e2e test environment
+	@hack/verify-e2e.sh
+
+local-up: ## Start local Kuasar cluster for testing
+	@hack/local-up-kuasar.sh
+
+clean-e2e: ## Clean e2e test artifacts
+	@$(MAKE) -f Makefile.e2e clean-e2e
 
 install-vmm:
 	@install -d -m 750 ${DEST_DIR}${BIN_DIR}
