@@ -44,28 +44,31 @@ mod runtime_tests {
 
     #[tokio::test]
     #[serial]
-    async fn test_runc_runtime_lifecycle() {
-        info!("Starting runc runtime lifecycle test");
+    async fn test_runtime_lifecycle() {
+        // Get runtime from environment variable, default to runc
+        let runtime = std::env::var("RUNTIME").unwrap_or_else(|_| "runc".to_string());
+        
+        info!("Starting {} runtime lifecycle test", runtime);
         
         let mut ctx = setup_test_context().await;
         
         // Start services
-        ctx.start_services(&["runc"]).await
-            .expect("Failed to start runc service");
+        ctx.start_services(&[&runtime]).await
+            .expect(&format!("Failed to start {} service", runtime));
         
         // Run the test with timeout
-        let result = timeout(TEST_TIMEOUT, ctx.test_runtime("runc")).await
+        let result = timeout(TEST_TIMEOUT, ctx.test_runtime(&runtime)).await
             .expect("Test timed out")
             .expect("Test execution failed");
         
-        assert!(result.success, "runc runtime test failed: {:?}", result.error);
+        assert!(result.success, "{} runtime test failed: {:?}", runtime, result.error);
         assert!(result.sandbox_created, "Sandbox should be created");
         assert!(result.container_created, "Container should be created");
         assert!(result.container_started, "Container should be started");
         assert!(result.container_running, "Container should reach running state");
         assert!(result.cleanup_completed, "Cleanup should complete");
         
-        info!("runc runtime lifecycle test completed successfully");
+        info!("{} runtime lifecycle test completed successfully", runtime);
     }
 }
 
@@ -79,7 +82,10 @@ mod integration_tests {
         info!("Testing service startup and readiness");
         
         let mut ctx = setup_test_context().await;
-        let runtimes = ["runc"];
+        
+        // Use runtime from environment variable, default to runc
+        let runtime = std::env::var("RUNTIME").unwrap_or_else(|_| "runc".to_string());
+        let runtimes = [runtime.as_str()];
         
         // Start services and verify they become ready
         ctx.start_services(&runtimes).await
@@ -105,7 +111,10 @@ mod integration_tests {
         info!("Testing configuration files");
         
         let ctx = setup_test_context().await;
-        let runtimes = ["runc"];
+        
+        // Use runtime from environment variable, default to runc
+        let runtime = std::env::var("RUNTIME").unwrap_or_else(|_| "runc".to_string());
+        let runtimes = [runtime.as_str()];
         
         for runtime in &runtimes {
             let runtime_config = ctx.get_runtime_config(runtime)
@@ -163,14 +172,17 @@ mod error_handling_tests {
         let ctx = setup_test_context().await;
         // Intentionally not starting services
         
+        // Use runtime from environment variable, default to runc
+        let runtime = std::env::var("RUNTIME").unwrap_or_else(|_| "runc".to_string());
+        
         // Clean up any existing socket files to ensure clean state
-        let runtime_config = ctx.get_runtime_config("runc").expect("Should get runc config");
+        let runtime_config = ctx.get_runtime_config(&runtime).expect("Should get runtime config");
         let socket_path = std::path::Path::new(&runtime_config.socket_path);
         if socket_path.exists() {
             let _ = std::fs::remove_file(socket_path);
         }
         
-        let result = timeout(Duration::from_secs(10), ctx.test_runtime("runc")).await
+        let result = timeout(Duration::from_secs(10), ctx.test_runtime(&runtime)).await
             .expect("Test should complete within timeout")
             .expect("Test execution should not panic");
         

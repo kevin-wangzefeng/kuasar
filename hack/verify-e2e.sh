@@ -145,6 +145,8 @@ function check_config_files() {
     local required_configs=(
         "sandbox-runc.yaml"
         "container-runc.yaml"
+        "sandbox-wasm.yaml" 
+        "container-wasm.yaml"
     )
     
     for config in "${required_configs[@]}"; do

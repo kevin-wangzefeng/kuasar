@@ -22,7 +22,7 @@ endif
 .PHONY: vmm wasm quark clean all install-vmm install-wasm install-quark install \
         bin/vmm-sandboxer bin/vmm-task bin/vmlinux.bin bin/kuasar.img bin/kuasar.initrd \
         bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer \
-        test-e2e test-e2e-framework verify-e2e local-up clean-e2e help
+        test-e2e test-e2e-framework test-e2e-runc test-e2e-wasm verify-e2e local-up clean-e2e help
 
 all: vmm quark wasm
 
@@ -120,6 +120,9 @@ test-e2e-framework: ## Run e2e framework unit tests (no service startup required
 
 test-e2e-runc: ## Test only runc runtime
 	@$(MAKE) -f Makefile.e2e test-e2e-runc
+
+test-e2e-wasm: ## Test only wasm runtime
+	@$(MAKE) -f Makefile.e2e test-e2e-wasm
 
 test-e2e-parallel: ## Run all tests in parallel
 	@$(MAKE) -f Makefile.e2e test-e2e-parallel

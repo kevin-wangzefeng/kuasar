@@ -226,7 +226,7 @@ fn print_help() {
     println!("Usage: kuasar-e2e [OPTIONS]\n");
     println!("Options:");
     println!("  -r, --runtime <RUNTIMES>  Comma-separated list of runtimes to test");
-    println!("                            Available: runc");
+    println!("                            Available: runc,wasm");
     println!("                            Default: runc");
     println!("  -p, --parallel            Run tests in parallel");
     println!("  -h, --help                Show this help message\n");

@@ -1,0 +1,12 @@
+metadata:
+  name: wasm-sandbox
+  namespace: default
+  uid: wasm-sandbox-uid-001
+  attempt: 0
+linux:
+  cgroup_parent: "/kuasar/wasm"
+  security_context:
+    namespace_options:
+      network: 2
+annotations:
+  io.kubernetes.cri.runtime-handler: "wasm"

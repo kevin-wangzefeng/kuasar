@@ -79,6 +79,7 @@ make test-e2e-framework
 
 # Test specific runtimes
 make test-e2e-runc          # Test only runc runtime
+make test-e2e-wasm          # Test only wasm runtime
 
 # Run tests in parallel
 make test-e2e-parallel
@@ -103,6 +104,7 @@ cargo build --release --bin kuasar-e2e
 
 # Test specific runtime
 ./target/release/kuasar-e2e --runtime runc
+./target/release/kuasar-e2e --runtime wasm
 
 # Run in parallel
 ./target/release/kuasar-e2e --parallel
@@ -144,7 +146,7 @@ RUNTIME=runc PARALLEL=true LOG_LEVEL=debug hack/e2e-test.sh
 Environment variables:
 
 - `ARTIFACTS`: Directory for test artifacts (default: temp directory)
-- `RUNTIME`: Comma-separated list of runtimes to test (default: `runc`)
+- `RUNTIME`: Comma-separated list of runtimes to test (default: `runc`, available: `runc,wasm`)
 - `PARALLEL`: Enable parallel execution (default: `false`)
 - `LOG_LEVEL`: Logging level (`trace`, `debug`, `info`, `warn`, `error`)
 - `RUST_LOG`: Rust-specific logging configuration
@@ -153,7 +155,7 @@ Environment variables:
 
 ### Runtime Lifecycle Tests
 
-Each supported runtime (runc) goes through a complete lifecycle test:
+Each supported runtime (runc, wasm) goes through a complete lifecycle test:
 
 1. **Service Startup**: Start the appropriate sandboxer service
 2. **Service Readiness**: Wait for service socket to become available
