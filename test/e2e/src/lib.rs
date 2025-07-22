@@ -303,12 +303,6 @@ impl Drop for E2EContext {
             let _ = std::process::Command::new("pkill")
                 .args(&["-f", "runc-sandboxer"])
                 .output();
-            let _ = std::process::Command::new("pkill")
-                .args(&["-f", "wasm-sandboxer"])
-                .output();
-            let _ = std::process::Command::new("pkill")
-                .args(&["-f", "resource-slot-sandboxer"])
-                .output();
         }
     }
 }

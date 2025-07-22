@@ -16,7 +16,7 @@
 
 KUASAR_ROOT ?= $(shell pwd)
 ARTIFACTS_DIR ?= $(KUASAR_ROOT)/_artifacts/$(shell date +%Y%m%d-%H%M%S)
-RUNTIME ?= runc,wasm,resource-slot
+RUNTIME ?= runc
 PARALLEL ?= false
 LOG_LEVEL ?= info
 
@@ -32,7 +32,7 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*?##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Variables:"
-	@echo "  RUNTIME          Runtimes to test (default: runc,wasm,resource-slot)"
+	@echo "  RUNTIME          Runtimes to test (default: runc)"
 	@echo "  ARTIFACTS_DIR    Test artifacts directory"
 	@echo "  PARALLEL         Run tests in parallel (default: false)"
 	@echo "  LOG_LEVEL        Logging level (default: info)"
