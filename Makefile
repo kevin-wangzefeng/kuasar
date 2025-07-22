@@ -121,6 +121,9 @@ test-e2e-framework: ## Run e2e framework unit tests (no service startup required
 test-e2e-runc: ## Test only runc runtime
 	@$(MAKE) -f Makefile.e2e test-e2e-runc
 
+test-e2e-wasm: ## Test only wasm runtime
+	@$(MAKE) -f Makefile.e2e test-e2e-wasm
+
 test-e2e-parallel: ## Run all tests in parallel
 	@$(MAKE) -f Makefile.e2e test-e2e-parallel
 

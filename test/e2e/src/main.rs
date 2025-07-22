@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
         .init();
     
     let args: Vec<String> = env::args().collect();
-    let mut runtimes = vec!["runc"];
+    let mut runtimes = vec!["runc", "wasm"];
     let mut parallel = false;
     
     // Parse command line arguments
@@ -226,8 +226,8 @@ fn print_help() {
     println!("Usage: kuasar-e2e [OPTIONS]\n");
     println!("Options:");
     println!("  -r, --runtime <RUNTIMES>  Comma-separated list of runtimes to test");
-    println!("                            Available: runc");
-    println!("                            Default: runc");
+    println!("                            Available: runc,wasm");
+    println!("                            Default: runc,wasm");
     println!("  -p, --parallel            Run tests in parallel");
     println!("  -h, --help                Show this help message\n");
     println!("Environment variables:");
