@@ -77,16 +77,12 @@ test-e2e-framework: ## Run e2e framework unit tests (no service startup required
 .PHONY: test-e2e-runc
 test-e2e-runc: build-e2e ## Test only runc runtime
 	@echo "Testing runc runtime..."
-	ARTIFACTS=$(ARTIFACTS_DIR) \
-	RUNTIME=runc \
-	PARALLEL=false \
-	LOG_LEVEL=$(LOG_LEVEL) \
-	$(HACK_DIR)/e2e-test.sh
+	RUNTIME=runc $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: test-e2e-parallel
 test-e2e-parallel: build-e2e ## Run all tests in parallel
 	@echo "Running tests in parallel..."
-	PARALLEL=true $(MAKE) _run-binary-runner
+	PARALLEL=true $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: clean-e2e
 clean-e2e: ## Clean e2e build artifacts
