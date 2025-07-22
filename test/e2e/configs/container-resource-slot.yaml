@@ -1,0 +1,14 @@
+metadata:
+  name: resource-slot-container
+image:
+  image: "busybox:latest"
+command:
+  - "/bin/sh"
+  - "-c"
+  - "sleep 3600"
+linux:
+  resources:
+    cpu_quota: 100000
+    cpu_period: 100000
+    memory_limit_in_bytes: 536870912
+log_path: "/tmp/resource-slot-container.log"

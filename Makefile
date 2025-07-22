@@ -1,4 +1,9 @@
-HYPERVISOR ?= cloud_hypervisor
+HYPERVISOR ?= cloud_h.PHONY: vmm wasm quark runc resource-slot clean all install-vmm install-wasm install-quark install-runc install-resource-slot install 
+        bin/vmm-sandboxer bin/vmm-task bin/vmlinux.bin bin/kuasar.img bin/kuasar.initrd 
+        bin/wasm-sandboxer bin/quark-sandboxer bin/runc-sandboxer bin/resource-slot-sandboxer 
+        test-e2e test-e2e-framework verify-e2e local-up clean-e2e help
+
+all: vmm quark wasm runc resource-slot ## Build all Kuasar componentsisor
 GUESTOS_IMAGE ?= centos
 WASM_RUNTIME ?= wasmedge
 KERNEL_VERSION ?= 6.12.8
@@ -61,25 +66,26 @@ bin/resource-slot-sandboxer:
 	@cd resource_slot && cargo build --release
 	@mkdir -p bin && cp resource_slot/target/release/resource-slot-sandboxer bin/resource-slot-sandboxer
 
-wasm: bin/wasm-sandboxer
-quark: bin/quark-sandboxer
-runc: bin/runc-sandboxer
-resource-slot: bin/resource-slot-sandboxer
+wasm: bin/wasm-sandboxer ## Build WebAssembly sandboxer
+quark: bin/quark-sandboxer ## Build Quark sandboxer  
+runc: bin/runc-sandboxer ## Build runc sandboxer
+resource-slot: bin/resource-slot-sandboxer ## Build resource-slot sandboxer
 
 ifeq ($(HYPERVISOR), cloud_hypervisor)
-vmm: bin/vmm-sandboxer bin/kuasar.img bin/vmlinux.bin
+vmm: bin/vmm-sandboxer bin/kuasar.img bin/vmlinux.bin ## Build VMM sandboxer (cloud-hypervisor)
 else
 # stratovirt or qemu
-vmm: bin/vmm-sandboxer bin/kuasar.initrd bin/vmlinux.bin
+vmm: bin/vmm-sandboxer bin/kuasar.initrd bin/vmlinux.bin ## Build VMM sandboxer (stratovirt/qemu)
 endif
 
-clean:
+clean: ## Clean all build artifacts
 	@rm -rf bin
 	@cd vmm/sandbox && cargo clean
 	@cd vmm/task && cargo clean
 	@cd wasm && cargo clean
 	@cd quark && cargo clean
 	@cd runc && cargo clean
+	@cd resource_slot && cargo clean
 	@cd resource_slot && cargo clean
 
 install-vmm:
@@ -119,4 +125,4 @@ install-resource-slot:
 	@install -d -m 750 ${DEST_DIR}${SYSTEMD_SERVICE_DIR}
 	@install -p -m 640 resource_slot/service/kuasar-resource-slot.service ${DEST_DIR}${SYSTEMD_SERVICE_DIR}/kuasar-resource-slot.service
 
-install: all install-vmm install-wasm install-quark install-runc install-resource-slot
+install: all install-vmm install-wasm install-quark install-runc install-resource-slot ## Install all Kuasar components
