@@ -42,6 +42,12 @@ build-wasm-deps: ## Build wasm runtime dependencies
 	@echo "Building wasm runtime dependencies..."
 	cd $(KUASAR_ROOT) && $(MAKE) wasm
 
+.PHONY: install-wasm-deps
+install-wasm-deps: build-wasm-deps ## Install wasm runtime dependencies to system
+	@echo "Installing wasm runtime dependencies..."
+	sudo cp $(KUASAR_ROOT)/bin/wasm-sandboxer /usr/local/bin/
+	sudo cp $(KUASAR_ROOT)/shim/target/release/containerd-shim-kuasar-wasm-v2 /usr/local/bin/
+
 .PHONY: help
 help: ## Show this help message
 	@echo "Kuasar E2E Testing Makefile (Rust-based)"
@@ -108,7 +114,7 @@ test-e2e-runc-ci: install-runc-deps build-e2e ## Test runc runtime with CI setup
 	RUNTIME=runc $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: test-e2e-wasm
-test-e2e-wasm: build-e2e ## Test only wasm runtime
+test-e2e-wasm: build-wasm-deps build-e2e ## Test only wasm runtime
 	@echo "Testing wasm runtime..."
 	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
 
