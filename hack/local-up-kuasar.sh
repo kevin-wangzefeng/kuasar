@@ -333,7 +333,7 @@ build_component() {
             ;;
         wasm)
             cd "$KUASAR_ROOT/wasm"
-            cargo build --release --features=wasmtime
+            cargo build --release
             ;;
         vmm)
             cd "$KUASAR_ROOT/vmm"
