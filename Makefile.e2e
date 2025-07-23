@@ -87,9 +87,10 @@ test-e2e-wasm: build-e2e ## Test only wasm runtime
 	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: test-e2e-parallel
-test-e2e-parallel: build-e2e ## Run all tests in parallel
-	@echo "Running tests in parallel..."
-	PARALLEL=true $(MAKE) -f Makefile.e2e _run-binary-runner
+test-e2e-parallel: build-e2e ## Run all tests in parallel using built-in Rust parallelism
+	@echo "Running runc and wasm tests in parallel using Rust binary..."
+	@echo "Note: This runs only the E2E binary tests in parallel, unit tests are skipped"
+	RUNTIME=runc,wasm PARALLEL=true $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: clean-e2e
 clean-e2e: ## Clean e2e build artifacts

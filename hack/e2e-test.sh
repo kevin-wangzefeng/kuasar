@@ -230,9 +230,18 @@ function main() {
     check_dependencies  
     build_test_binaries
     
-    # Run both the standalone e2e binary and unit tests
+    # Run the standalone e2e binary
     run_e2e_tests
-    run_rust_unit_tests
+    
+    # Skip unit tests in parallel mode with multiple runtimes
+    # (unit tests don't support comma-separated runtime lists)
+    if [[ "${PARALLEL}" == "true" ]] && [[ "${RUNTIME}" == *","* ]]; then
+        echo "Skipping unit tests in parallel mode with multiple runtimes"
+        echo "Unit tests don't support comma-separated runtime lists"
+    else
+        # Run unit tests for single runtime or non-parallel mode
+        run_rust_unit_tests
+    fi
     
     echo "All tests completed successfully!"
     echo "Test results available in: ${ARTIFACTS}"
