@@ -25,7 +25,7 @@ KUASAR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${KUASAR_ROOT}/hack/lib/init.sh"
 
 # Test configuration
-RUNTIME="${RUNTIME:-"runc,wasm,resource-slot"}"
+RUNTIME="${RUNTIME:-"runc,wasm"}"
 ARTIFACTS="${ARTIFACTS:-"${KUASAR_ROOT}/_artifacts/$(date +%Y%m%d-%H%M%S)"}"
 PARALLEL="${PARALLEL:-false}"
 LOG_LEVEL="${LOG_LEVEL:-"info"}"
@@ -39,7 +39,7 @@ Runs Kuasar E2E tests using Rust testing framework.
 
 Options:
     -h, --help              Show this help message
-    --runtime RUNTIMES      Comma-separated list of runtimes to test (default: runc,wasm,resource-slot)
+    --runtime RUNTIMES      Comma-separated list of runtimes to test (default: runc,wasm)
     --artifacts DIR         Directory to store test artifacts
     --parallel              Run tests in parallel
     --log-level LEVEL       Log level for tests (default: info)
@@ -202,8 +202,7 @@ function cleanup() {
     
     # Kill any remaining processes
     pkill -f "runc-sandboxer" || true
-    pkill -f "wasm-sandboxer" || true  
-    pkill -f "resource-slot-sandboxer" || true
+    pkill -f "wasm-sandboxer" || true
     
     # Clean up containers and sandboxes
     crictl rm --all --force 2>/dev/null || true

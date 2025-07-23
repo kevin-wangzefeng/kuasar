@@ -145,10 +145,6 @@ function check_config_files() {
     local required_configs=(
         "sandbox-runc.yaml"
         "container-runc.yaml"
-        "sandbox-wasmedge.yaml" 
-        "container-wasmedge.yaml"
-        "sandbox-resource-slot.yaml"
-        "container-resource-slot.yaml"
     )
     
     for config in "${required_configs[@]}"; do

@@ -95,7 +95,6 @@ clean-test-env: ## Clean test environment (containers, sandboxes, processes)
 	@echo "Cleaning test environment..."
 	-pkill -f "runc-sandboxer" 2>/dev/null || true
 	-pkill -f "wasm-sandboxer" 2>/dev/null || true
-	-pkill -f "resource-slot-sandboxer" 2>/dev/null || true
 	-crictl rm --all --force 2>/dev/null || true
 	-crictl rmp --all --force 2>/dev/null || true
 

@@ -27,7 +27,7 @@ KUASAR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${KUASAR_ROOT}/hack/lib/init.sh"
 
 # Default configuration
-DEFAULT_COMPONENTS="runc,wasm,resource-slot"
+DEFAULT_COMPONENTS="runc,wasm"
 LOG_DIR="${LOG_DIR:-${KUASAR_ROOT}/logs}"
 PID_FILE="$LOG_DIR/kuasar.pid"
 
@@ -44,7 +44,7 @@ Builds and runs Kuasar sandbox services following Kubernetes patterns.
 
 Options:
   -c, --components COMPONENTS   Specify components to compile and start, comma-separated
-                               Available values: runc,wasm,resource-slot,vmm,quark
+                               Available values: runc,wasm,vmm,quark
                                Default: $DEFAULT_COMPONENTS
   -h, --help                   Show this help information
   --skip-build                 Skip compilation step, start existing binaries directly
@@ -56,8 +56,8 @@ Description:
   installation instructions if missing dependencies are found.
 
 Examples:
-  $0                           # Use default components (runc,wasm,resource-slot)
-  $0 -c runc,resource-slot     # Only compile and start runc and resource-slot
+  $0                           # Use default components (runc,wasm)
+  $0 -c runc,                  # Only compile and start runc
   $0 -c runc --skip-build      # Only start pre-compiled runc component
   $0 --debug                   # Start in debug mode
   $0 --check-deps              # Only check dependency installation status
@@ -131,7 +131,6 @@ cleanup() {
     # Clean up other Kuasar processes
     pkill -f "kuasar-" 2>/dev/null || true
     pkill -f "runc-sandboxer" 2>/dev/null || true
-    pkill -f "resource-slot-sandboxer" 2>/dev/null || true
     
     # Clean up temporary files
     kuasar::log::info "Cleaning temporary files..."
@@ -336,10 +335,6 @@ build_component() {
             cd "$KUASAR_ROOT/wasm"
             cargo build --release
             ;;
-        resource-slot)
-            cd "$KUASAR_ROOT/resource_slot"
-            cargo build --release
-            ;;
         vmm)
             cd "$KUASAR_ROOT/vmm"
             make build
@@ -374,10 +369,6 @@ start_component() {
         wasm)
             binary="$KUASAR_ROOT/wasm/target/release/wasm-sandboxer"
             args="--listen /run/kuasar-wasm.sock --dir /run/kuasar-wasm"
-            ;;
-        resource-slot)
-            binary="$KUASAR_ROOT/resource_slot/target/release/resource-slot-sandboxer"
-            args="--listen /run/kuasar-resource-slot.sock --dir /run/kuasar-resource-slot"
             ;;
         vmm)
             binary="$KUASAR_ROOT/vmm/target/release/vmm-sandboxer"
@@ -513,7 +504,6 @@ main() {
     kuasar::log::info "You can now run test scripts in another terminal:"
     kuasar::log::info "  cd $KUASAR_ROOT/tests/basics"
     kuasar::log::info "  ./test-runc.sh"
-    kuasar::log::info "  ./test-resource-slot.sh"
     kuasar::log::info ""
     kuasar::log::info "Press Ctrl+C to stop all services"
     
