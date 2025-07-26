@@ -118,6 +118,11 @@ test-e2e-wasm: build-wasm-deps build-e2e ## Test only wasm runtime
 	@echo "Testing wasm runtime..."
 	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
 
+.PHONY: test-e2e-wasm-ci
+test-e2e-wasm-ci: install-wasm-deps build-e2e ## Test wasm runtime with CI setup (installs deps to system)
+	@echo "Testing wasm runtime with CI setup..."
+	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
+
 .PHONY: test-e2e-parallel
 test-e2e-parallel: build-e2e ## Run all tests in parallel using built-in Rust parallelism
 	@echo "Running runc and wasm tests in parallel using Rust binary..."
