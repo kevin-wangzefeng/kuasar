@@ -59,10 +59,10 @@ jobs:
             ${{ runner.os }}-cargo-e2e-
 
       - name: Build e2e test framework
-        run: sudo make -f Makefile.e2e build-e2e
+        run: make  -f Makefile.e2e build-e2e
 
       - name: Run framework unit tests
-        run: sudo make -f Makefile.e2e test-e2e-framework
+        run: make  -f Makefile.e2e test-e2e-framework
 
   # Full integration tests with runc runtime
   integration-tests-runc:
@@ -159,7 +159,7 @@ jobs:
           sudo crictl ps || true
       
       - name: Setup e2e environment
-        run: sudo make -f Makefile.e2e setup-e2e-env-ci
+        run: make  -f Makefile.e2e setup-e2e-env-ci
 
       - name: Run runc e2e tests
         env:
@@ -168,7 +168,7 @@ jobs:
           ARTIFACTS: ${{ github.workspace }}/_artifacts/runc-${{ github.run_number }}
         run: |
           mkdir -p $ARTIFACTS
-          sudo make -f Makefile.e2e test-e2e-runc-ci
+          make  -f Makefile.e2e test-e2e-runc-ci
 
       - name: Upload test artifacts
         if: always()
@@ -180,7 +180,7 @@ jobs:
 
       - name: Cleanup test environment
         if: always()
-        run: sudo make -f Makefile.e2e clean-test-env
+        run: make  -f Makefile.e2e clean-test-env
 
   # WASM integration tests (placeholder for future implementation)
   # integration-tests-wasm:
