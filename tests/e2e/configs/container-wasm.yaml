@@ -1,0 +1,12 @@
+metadata:
+  name: wasm-container
+image:
+  image: "ghcr.io/containerd/runwasi/wasi-demo-app:latest"
+command: []
+args: []
+linux:
+  resources:
+    cpu_quota: 50000
+    cpu_period: 100000
+    memory_limit_in_bytes: 104857600
+log_path: "/tmp/wasm-container.log"

@@ -38,9 +38,15 @@ install-runc-deps: build-runc-deps ## Install runc runtime dependencies to syste
 	sudo cp $(KUASAR_ROOT)/shim/target/release/containerd-shim-kuasar-vmm-v2 /usr/local/bin/
 
 .PHONY: build-wasm-deps
-build-wasm-deps: ## Build wasm runtime dependencies (not implemented yet)
-	@echo "WASM dependencies not implemented on this branch"
-	@exit 1
+build-wasm-deps: ## Build wasm runtime dependencies
+	@echo "Building wasm runtime dependencies..."
+	cd $(KUASAR_ROOT) && $(MAKE) wasm
+
+.PHONY: install-wasm-deps
+install-wasm-deps: build-wasm-deps ## Install wasm runtime dependencies to system
+	@echo "Installing wasm runtime dependencies..."
+	sudo cp $(KUASAR_ROOT)/bin/wasm-sandboxer /usr/local/bin/
+	sudo cp $(KUASAR_ROOT)/shim/target/release/containerd-shim-kuasar-wasm-v2 /usr/local/bin/
 
 .PHONY: help
 help: ## Show this help message
@@ -54,6 +60,7 @@ help: ## Show this help message
 	@echo "  ARTIFACTS_DIR    Test artifacts directory"
 	@echo "  PARALLEL         Run tests in parallel (default: false)"
 	@echo "  LOG_LEVEL        Logging level (default: info)"
+	@echo ""
 	@echo ""
 	@echo "Note: test-e2e runs full integration tests. Use test-e2e-framework for framework"
 	@echo "      unit tests only (no service startup required)."
@@ -106,16 +113,21 @@ test-e2e-runc-ci: install-runc-deps build-e2e ## Test runc runtime with CI setup
 	@echo "Testing runc runtime with CI setup..."
 	RUNTIME=runc $(MAKE) -f Makefile.e2e _run-binary-runner
 
-# TODO: Enable when WASM e2e tests are implemented
-# .PHONY: test-e2e-wasm
-# test-e2e-wasm: build-e2e ## Test only wasm runtime
-# 	@echo "Testing wasm runtime..."
-# 	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
+.PHONY: test-e2e-wasm
+test-e2e-wasm: build-wasm-deps build-e2e ## Test only wasm runtime
+	@echo "Testing wasm runtime..."
+	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
+
+.PHONY: test-e2e-wasm-ci
+test-e2e-wasm-ci: install-wasm-deps build-e2e ## Test wasm runtime with CI setup (installs deps to system)
+	@echo "Testing wasm runtime with CI setup..."
+	RUNTIME=wasm $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: test-e2e-parallel
-test-e2e-parallel: build-e2e ## Run all tests in parallel
-	@echo "Running tests in parallel..."
-	PARALLEL=true $(MAKE) -f Makefile.e2e _run-binary-runner
+test-e2e-parallel: build-e2e ## Run all tests in parallel using built-in Rust parallelism
+	@echo "Running runc and wasm tests in parallel using Rust binary..."
+	@echo "Note: This runs only the E2E binary tests in parallel, unit tests are skipped"
+	RUNTIME=runc,wasm PARALLEL=true $(MAKE) -f Makefile.e2e _run-binary-runner
 
 .PHONY: clean-e2e
 clean-e2e: ## Clean e2e build artifacts
