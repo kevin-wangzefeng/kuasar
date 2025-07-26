@@ -120,7 +120,7 @@ jobs:
           image-endpoint: "unix:///run/containerd/containerd.sock"
           timeout: 60s
           debug: false
-          pull-image-on-create: on
+          pull-image-on-create: true
           EOF
           echo "crictl configured for containerd runtime"
 
