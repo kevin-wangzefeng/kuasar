@@ -410,7 +410,7 @@ start_component() {
     # Create runtime directory
     local run_dir="/run/kuasar-$component"
     sudo mkdir -p "$run_dir"
-    sudo chmod 777 "$run_dir"
+    sudo chmod 755 "$run_dir"
 
     # Start component
     kuasar::log::info "Starting: $binary $args"
